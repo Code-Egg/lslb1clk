@@ -519,11 +519,10 @@ set_banner(){
     echoG 'Set Banner'
     rm_dummy
     if [ ! -e ${BANNERDST} ]; then
-        curl -s https://raw.githubusercontent.com/Code-Egg/lslb1clk/main/Banner/${BANNERNAME} \
+        curl -s https://raw.githubusercontent.com/Code-Egg/lslb1clk/main/Banner/litespeedadc \
         -o ${BANNERDST}
         chmod +x ${BANNERDST}
     fi
-	setup_domain
     help_message 1
 }
 
@@ -606,7 +605,6 @@ main(){
     fi
     verify_installation
     set_banner
-    show_access 
     end_message
 }
 
