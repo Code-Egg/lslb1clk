@@ -131,16 +131,22 @@ check_lan_ipv4(){
         validate_ipv4 "${IP_FILTER_RESULT}"
         echoG "Found VPC IP: ${IP_FILTER_RESULT}" 
     else
-        echoY "Found multiple IP match with ^${LAN_IP_FILTER} filter, please input it manually! exit!"
+        echoY "Found multiple IP match with ^${LAN_IP_FILTER} filter, please input it manually!"
         ip addr;
         while true; do
-        printf "%s" "Please input Vultr ADC VPC IP: "
-        read ADC_LOCAL_IP
-        printf "%s" "The IP you input is: ${ADC_LOCAL_IP}. [y/N]: "
-        if [[ "${TMP_YN}" =~ ^(y|Y) ]]; then
+            printf "%s" "Please input Vultr ADC VPC IP: "
+            read ADC_LOCAL_IP
             validate_ipv4 "${WP_LOCAL_IP}"
-            break
-        fi    
+            if [ -z "${ADC_LOCAL_IP}" ] ; then
+                echo -e "\nPlease input a valid IP\n"
+                exit 1
+            fi
+            echo -e "The domain you put is: \e[31m${ADC_LOCAL_IP}\e[39m"
+            printf "%s"  "Please verify it is correct. [y/N] "
+            read TMP_YN
+            if [[ "${TMP_YN}" =~ ^(y|Y) ]]; then
+                break
+            fi    
         done 
     fi
     FILTER_NETMASK=$(ip -4 addr | grep "${IP_FILTER_RESULT}" | awk -F '/' '{ print $2 }' | cut -f 1 -d " ")
