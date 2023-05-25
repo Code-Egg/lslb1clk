@@ -61,12 +61,12 @@ help_message(){
     case ${1} in
     "1")
         echoY 'Installation finished, please reopen the ssh console to see the banner.'
-        if [ "${APP}" = 'opencart' ]; then
-            echo "Follow https://docs.litespeedtech.com/lscache/lscoc/installation/ to seutp the cache."
+        if [ "${LSLB_CONFIG}" = 'scaling_vultr' ]; then
+            echo "Check https://docs.litespeedtech.com/lsadc/ for more scaling information."
         fi    
     ;;
     "2")
-        echo 'This script is for testing porpuse, so we just use www-data as the user.'
+        echo 'This script is for shorten your setup time for the WebADC. Without any option, the script will install the WebADC with default value and trial license.'
         echo -e "\033[1mOPTIONS\033[0m"
         echow '-L, --license'
         echo "${EPACE}${EPACE}Example: lslb1clk.sh -L, to use specified LSADC serial number."
