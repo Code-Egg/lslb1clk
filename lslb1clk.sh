@@ -10,6 +10,10 @@ LSVCONF="${LSDIR}/DEFAULT/conf/vhconf.xml"
 LICENSE='TRIAL'
 LSLB_CONFIG='default'
 SCRIPTPATH="$( cd "$(dirname "$0")" ; pwd -P )"
+ADC_LOCAL_IP=''
+WP_LOCAL_IP=''
+VULTR_API=''
+VULTR_REGION=''
 USER=''
 GROUP=''
 LSUSER=''
@@ -120,71 +124,73 @@ validate_ipv4(){
     fi
 }
 
-check_lan_ipv4(){
-    ### Filter IP start from 10.*
-    IP_FILTER_RESULT=$(ip -4 addr | grep -oP '(?<=inet\s)\d+(\.\d+){3}' | grep -e "^${LAN_IP_FILTER}")
-    FILTER_MATCH_NUM="$(ip -4 addr | grep -oP '(?<=inet\s)\d+(\.\d+){3}' | grep -e "^${LAN_IP_FILTER}" | wc -l)"
-    if [ "${FILTER_MATCH_NUM}" = '0' ]; then
-        echoR "No IP mathc with ^${LAN_IP_FILTER} filter, please check manually! exit! "
-        ip addr; exit 1
-    elif [ "${FILTER_MATCH_NUM}" = '1' ]; then
-        validate_ipv4 "${IP_FILTER_RESULT}"
-        echoG "Found VPC IP: ${IP_FILTER_RESULT}" 
+verify_input_exit_loop(){
+    if [ -z "${1}" ] ; then
+        echo -e "\nPlease input non-empty value! \n"
     else
-        echoY "Found multiple IP match with ^${LAN_IP_FILTER} filter, please input it manually!"
-        ip addr;
-        while true; do
-            printf "%s" "Please input Vultr ADC VPC IP: "
-            read ADC_LOCAL_IP
-            validate_ipv4 "${ADC_LOCAL_IP}"
-            if [ -z "${ADC_LOCAL_IP}" ] ; then
-                echo -e "\nPlease input a valid IP\n"
-                exit 1
-            fi
-            echo -e "The domain you put is: \e[31m${ADC_LOCAL_IP}\e[39m"
-            printf "%s"  "Please verify it is correct. [y/N] "
-            read TMP_YN
-            if [[ "${TMP_YN}" =~ ^(y|Y) ]]; then
-                break
-            fi    
-        done 
+        echo -e "The value you input is: \e[31m${1}\e[39m"
+        printf "%s"  "Please verify if it is correct. [n/Y] "
+        read TMP_YN
+        if [[ "${TMP_YN}" !=~ ^(n|N) ]]; then
+            break
+        fi    
     fi
-    FILTER_NETMASK=$(ip -4 addr | grep "${IP_FILTER_RESULT}" | awk -F '/' '{ print $2 }' | cut -f 1 -d " ")
+}
+
+get_lan_ipv4(){
+    ### Filter IP start from 10.*
+    if [ -z ${ADC_LOCAL_IP} ]; then 
+        ADC_LOCAL_IP=$(ip -4 addr | grep -oP '(?<=inet\s)\d+(\.\d+){3}' | grep -e "^${LAN_IP_FILTER}")
+        FILTER_MATCH_NUM="$(ip -4 addr | grep -oP '(?<=inet\s)\d+(\.\d+){3}' | grep -e "^${LAN_IP_FILTER}" | wc -l)"
+        if [ "${FILTER_MATCH_NUM}" = '0' ]; then
+            echoR "No IP mathc with ^${LAN_IP_FILTER} filter, please check manually! exit! "
+            ip addr; exit 1
+        elif [ "${FILTER_MATCH_NUM}" = '1' ]; then
+            validate_ipv4 "${ADC_LOCAL_IP}"
+            echoG "Found VPC IP: ${ADC_LOCAL_IP}" 
+        else
+            echoY "Found multiple IP match with ^${LAN_IP_FILTER} filter, please input it manually!"
+            ip addr;
+            while true; do
+                printf "%s" "Please input Vultr ADC VPC IP: "
+                read ADC_LOCAL_IP
+                validate_ipv4 "${ADC_LOCAL_IP}"
+                verify_input_exit_loop "${ADC_LOCAL_IP}"
+            done 
+        fi
+    fi
+    FILTER_NETMASK=$(ip -4 addr | grep "${ADC_LOCAL_IP}" | awk -F '/' '{ print $2 }' | cut -f 1 -d " ")
 }
 
 get_vultr_api(){
-    while true; do
-        printf "%s" "Please input Vultr API string: "
-        read VULTR_API
-        if [ -z "${VULTR_API}" ] ; then
-            echo -e "\nPlease input a valid API\n"
-            exit 1
-        fi  
-        printf "%s" "The API you input is: \e[31m${${VULTR_API}}\e[39m"
-        printf "%s"  "Please verify it is correct. [y/N] "
-        read TMP_YN        
-        if [[ "${TMP_YN}" =~ ^(y|Y) ]]; then
-            break
-        fi    
-    done
+    if [ -z ${VULTR_API} ]; then 
+        while true; do
+            printf "%s" "Please input Vultr API string: "
+            read VULTR_API
+            verify_input_exit_loop "${VULTR_API}"
+        done
+    fi
 }
 
 get_node_IP(){
-    while true; do
-        printf "%s" "Please input Vultr backend node IP: "
-        read WP_LOCAL_IP
-        printf "%s" "The IP you input is: ${WP_LOCAL_IP}. [y/N]: "
-        if [[ "${TMP_YN}" =~ ^(y|Y) ]]; then
+    if [ -z ${WP_LOCAL_IP} ]; then 
+        while true; do
+            printf "%s" "Please input Vultr backend node IP: "
+            read WP_LOCAL_IP
             validate_ipv4 "${WP_LOCAL_IP}"
-            break
-        fi    
-    done 
+            verify_input_exit_loop "${WP_LOCAL_IP}"
+        done 
+    fi
 }
 
-scaling_require_input(){
-    check_lan_ipv4
-    get_vultr_api
-    get_node_IP
+get_node_region(){
+    if [ -z ${VULTR_REGION} ]; then 
+        while true; do
+            printf "%s" "Please input 3 character airline code of your Vultr node region (Ex, for New York/New Jersey, it is ewr): "
+            read VULTR_REGION
+            verify_input_exit_loop VULTR_REGION
+        done
+    fi
 }
 
 
@@ -294,6 +300,17 @@ centos_sysupdate(){
     echoG 'System update'
     silent yum update -y
     setenforce 0
+}
+
+check_vultr_platform(){
+    if [ "${PROVIDER}" != 'vultr' ]; then
+        echoY "Detect ${PROVIDER} platform is not Vultr!"
+        printf "%s"  "Do you still want to continue? [y/N] "
+        read TMP_YN
+        if [[ "${TMP_YN}" !=~ ^(y|Y) ]]; then
+            exit 1
+        fi    
+    fi
 }
 
 remove_file(){
@@ -452,8 +469,9 @@ setup_scaling_vultr_lslb(){
     cp conf/scaling_vultr/lslbd_config.xml ${LSDIR}/conf/
     cp conf/scaling_vultr/wp-scale-cluster.xml ${LSDIR}/DEFAULT/conf/
     sed -i "s/VULTER_API/${VULTR_API}/g" ${LSCONF}
-    sed -i "s/ADC_LOCAL_IP/${IP_FILTER_RESULT}/g" ${LSCONF}
+    sed -i "s/ADC_LOCAL_IP/${ADC_LOCAL_IP}/g" ${LSCONF}
     sed -i "s/WP_LOCAL_IP/${WP_LOCAL_IP}/g" ${LSCONF}
+    sed -i "s/VULTR_REGION/${VULTR_REGION}/g" ${LSCONF}
     gen_selfsigned_cert
 }
 
@@ -551,6 +569,14 @@ end_message(){
     END_TIME="$(date -u +%s)"
     ELAPSED="$((${END_TIME}-${START_TIME}))"
     echoY "***Total of ${ELAPSED} seconds to finish process***"
+}
+
+scaling_require_input(){
+    check_vultr_platform
+    get_lan_ipv4
+    get_vultr_api
+    get_node_IP
+    get_node_region
 }
 
 init_check(){

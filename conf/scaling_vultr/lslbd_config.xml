@@ -264,7 +264,7 @@
           <cloudCU>
             <name>wp_scaler</name>
             <imageId>snapshot</imageId>
-            <region>SJC</region>
+            <region>VULTR_REGION</region>
             <scalerName>wp-scaler</scalerName>
             <rebootDeadInterval>0</rebootDeadInterval>
           </cloudCU>
@@ -308,7 +308,7 @@
     <enabled>1</enabled>
     <vendor>vultr</vendor>
     <auth>VULTER_API</auth>
-    <idPrefix>scale</idPrefix>
+    <idPrefix>lslbd</idPrefix>
     <statusUpdateDelay>10</statusUpdateDelay>
     <maxStatusUpdateTries>2</maxStatusUpdateTries>
     <cloudScalerList>
@@ -320,8 +320,8 @@
         <eventDynamicList>
           <eventDynamic>
             <cpuLoad>10</cpuLoad>
-            <cpuMinsUp>1</cpuMinsUp>
-            <cpuMinsDown>1</cpuMinsDown>
+            <cpuMinsUp>0</cpuMinsUp>
+            <cpuMinsDown>0</cpuMinsDown>
             <pingMisses>10</pingMisses>
             <minCount>2</minCount>
             <maxCount>2</maxCount>
