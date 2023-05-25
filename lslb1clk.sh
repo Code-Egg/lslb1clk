@@ -156,7 +156,13 @@ get_vultr_api(){
     while true; do
         printf "%s" "Please input Vultr API string: "
         read VULTR_API
-        printf "%s" "The API you input is: ${VULTR_API}. [y/N]: "
+        if [ -z "${VULTR_API}" ] ; then
+            echo -e "\nPlease input a valid API\n"
+            exit 1
+        fi  
+        printf "%s" "The API you input is: \e[31m${${VULTR_API}}\e[39m"
+        printf "%s"  "Please verify it is correct. [y/N] "
+        read TMP_YN        
         if [[ "${TMP_YN}" =~ ^(y|Y) ]]; then
             break
         fi    
