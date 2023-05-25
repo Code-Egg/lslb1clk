@@ -136,7 +136,7 @@ check_lan_ipv4(){
         while true; do
             printf "%s" "Please input Vultr ADC VPC IP: "
             read ADC_LOCAL_IP
-            validate_ipv4 "${WP_LOCAL_IP}"
+            validate_ipv4 "${ADC_LOCAL_IP}"
             if [ -z "${ADC_LOCAL_IP}" ] ; then
                 echo -e "\nPlease input a valid IP\n"
                 exit 1
