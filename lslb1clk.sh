@@ -200,11 +200,7 @@ centos_pkg_system(){
 }
 
 uninstall_msg(){
-    if [ ${UNINSTALL_ALL} = 'True' ]; then
-        printf '\033[31mUninstall LSWS, PHP, MariaDB, Postfix, Certbot and Document Folder, do you still want to continue?[y/N]\033[0m '
-    else
-        printf '\033[31mUninstall LSWS and PHP, do you still want to continue? [y/N]\033[0m '
-    fi    
+    printf '\033[31mUninstall LSLB, do you still want to continue? [y/N]\033[0m '
     read answer
     echo
 
@@ -336,7 +332,7 @@ test_lslb_admin(){
 
 install_lslb(){
     cd ${CMDFD}/
-    if [ -e ${CMDFD}/lsws* ] || [ -d ${LSDIR} ]; then
+    if [ -e ${CMDFD}/lslb* ] || [ -d ${LSDIR} ]; then
         echoY 'Remove existing LSADC'
         silent systemctl stop lslb
         KILL_PROCESS lslbd
@@ -375,7 +371,7 @@ install_lslb(){
     silent /bin/bash install.sh
     echoG 'Upgrade to Latest stable release'
     silent ${LSDIR}/admin/misc/lsup.sh -f
-    silent ${LSDIR}/bin/lswsctrl start
+    silent ${LSDIR}/bin/lslbctrl start
     SERVERV=$(cat ${LSDIR}/VERSION)
     echoG "Version: LSLB ${SERVERV}"
     rm -rf ${CMDFD}/lslb-*
