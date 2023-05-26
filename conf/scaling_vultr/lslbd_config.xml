@@ -249,7 +249,7 @@
       <sessionExMethod>1</sessionExMethod>
       <workerGroupList>
         <workerGroup>
-          <name>wp-webadc-worker1</name>
+          <name>VULTR_NODE_NAME</name>
           <type>proxy</type>
           <workerGroupEnabled>1</workerGroupEnabled>
           <sourceIP>ANY</sourceIP>

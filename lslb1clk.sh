@@ -175,7 +175,7 @@ get_vultr_api(){
 get_node_IP(){
     if [ -z ${WP_LOCAL_IP} ]; then 
         while true; do
-            printf "%s" "Please input Vultr backend node IP: "
+            printf "%s" "Please input Vultr backend node VPC IP: "
             read WP_LOCAL_IP
             validate_ipv4 "${WP_LOCAL_IP}"
             verify_input_exit_loop "${WP_LOCAL_IP}"
@@ -183,7 +183,26 @@ get_node_IP(){
     fi
 }
 
+get_node_json(){
+    ### Get node information via API and filter based on the node's VPC IP. 
+    echoG 'curl vultr API v2'
+    VULTR_OUTPUT_JSON=$(curl "https://api.vultr.com/v2/instances" -X GET -H "Authorization: Bearer ${VULTR_API}" \
+      | jq '.instances' | jq -r --arg  WP_LOCAL_IP "$WP_LOCAL_IP" 'map(select(.internal_ip == "$WP_LOCAL_IP"))')
+}
+
+get_node_name(){
+    ULTR_NODE_NAME=$(echo "${VULTR_OUTPUT_JSON}" | jq '.[].label')
+    if [ -z ${ULTR_NODE_NAME} ]; then 
+        while true; do
+            printf "%s" "Please input Vultr backend node name: "
+            read VULTR_NODE_NAME
+            verify_input_exit_loop VULTR_NODE_NAME
+        done
+    fi
+}
+
 get_node_region(){
+    VULTR_REGION=$(echo "${VULTR_OUTPUT_JSON}" | jq '.[].region')
     if [ -z ${VULTR_REGION} ]; then 
         while true; do
             printf "%s" "Please input 3 character airline code of your Vultr node region (Ex, for New York/New Jersey, it is ewr): "
@@ -472,6 +491,7 @@ setup_scaling_vultr_lslb(){
     sed -i "s/ADC_LOCAL_IP/${ADC_LOCAL_IP}/g" ${LSCONF}
     sed -i "s/WP_LOCAL_IP/${WP_LOCAL_IP}/g" ${LSCONF}
     sed -i "s/VULTR_REGION/${VULTR_REGION}/g" ${LSCONF}
+    sed -i "s/VULTR_REGION/${VULTR__NODE_REGION}/g" ${LSCONF}
     gen_selfsigned_cert
 }
 
@@ -575,6 +595,7 @@ scaling_require_input(){
     check_vultr_platform
     get_lan_ipv4
     get_vultr_api
+    get_node_json
     get_node_IP
     get_node_region
 }
