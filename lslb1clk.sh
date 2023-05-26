@@ -226,7 +226,16 @@ ubuntu_pkg_system(){
     else
         echoG 'Install net-tools'
         silent apt-get install net-tools -y
-    fi    
+    fi
+    if [ "${LSLB_CONFIG}" = 'scaling_vultr' ]; then
+        if [ -e /usr/bin/jq ]; then
+            echoG 'jq is already installed'
+        else    
+            echoG 'Install dmidecode'
+            silent apt-get install jq -y
+            [[ -e /usr/bin/jq ]] && echoG 'Install jq Success' || echoR 'Install jq Failed'
+        fi
+    fi
 }
 
 centos_pkg_system(){
@@ -243,6 +252,15 @@ centos_pkg_system(){
         echoG 'Install net-tools'
         silent yum install net-tools -y
     fi       
+    if [ "${LSLB_CONFIG}" = 'scaling_vultr' ]; then
+        if [ -e /usr/bin/jq ]; then
+            echoG 'jq is already installed'
+        else    
+            echoG 'Install dmidecode'
+            silent yum install jq -y
+            [[ -e /usr/bin/jq ]] && echoG 'Install jq Success' || echoR 'Install jq Failed'
+        fi
+    fi    
 }
 
 uninstall_msg(){
