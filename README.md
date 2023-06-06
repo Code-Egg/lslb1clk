@@ -5,7 +5,7 @@ Description
 --------
 This script is design for application quick install and testing porpuse.
 
-lsws1clk is a one-click installation script for LiteSpeed Web ADC Server. Using this script,
+lslb1clk is a one-click installation script for LiteSpeed Web ADC Server. Using this script,
 you can quickly and easily install LSADC and some example config setup. 
 
 The script come with trial license by default which has 15 days for free. After that, you may want to apply with your license. Or you can apply your serial number with `--license xxxxxxxx`. [Read More](https://litespeedtech.com/products/litespeed-web-adc/webadc-pricing)
